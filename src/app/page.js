@@ -11,6 +11,7 @@ export default function Home() {
   const [filteredGames, setFilteredGames] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortPlatform, setSortPlatform] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
 
   useEffect(() => {
     async function getGames() {
@@ -24,16 +25,25 @@ export default function Home() {
   useEffect(() => {
     let filtered = games;
 
-    // Filter by search term
+    // Filter games by search term
     if (searchTerm) {
       filtered = filtered.filter(
         (game) =>
-          game.title && // Ensure the game has a title
+          game.title &&
           game.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
+
+      // Generate autocomplete suggestions
+      const newSuggestions = games
+        .map((game) => game.title)
+        .filter((title) => title?.toLowerCase().includes(searchTerm.toLowerCase()))
+        .slice(0, 10); // Limit to 10 suggestions
+      setSuggestions(newSuggestions);
+    } else {
+      setSuggestions([]);
     }
 
-    // Filter by platform
+    // Filter games by platform
     if (sortPlatform) {
       filtered = filtered.filter((game) => game.platform === sortPlatform);
     }
@@ -42,9 +52,14 @@ export default function Home() {
   }, [searchTerm, sortPlatform, games]);
 
   return (
-    <div>
-      <div className="flex flex-col md:flex-row justify-between items-center mb-4">
-        <SearchBar value={searchTerm} onChange={setSearchTerm} />
+    <div className="p-6 bg-gray-900 min-h-screen text-gray-100">
+      <div className="flex flex-col md:flex-row items-center gap-4 mb-6">
+        <SearchBar
+          value={searchTerm}
+          onChange={setSearchTerm}
+          suggestions={suggestions}
+          onSelect={(title) => setSearchTerm(title)}
+        />
         <SortDropdown
           platforms={[...new Set(games.map((game) => game.platform))]}
           onChange={setSortPlatform}
